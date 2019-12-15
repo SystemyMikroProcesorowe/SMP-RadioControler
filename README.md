@@ -12,7 +12,8 @@ Schemat działania:
 
 # 4.
 # I
-a) Budowa samochodu, oraz test jego działania. \n
+a) Budowa samochodu, oraz test jego działania.
+
 b) Odbiór danych z żyroskopu i przetowarzenie ich.
 # II
 Opracowanie kodu komunikacji na 433 MHz (FS100A)
