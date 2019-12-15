@@ -7,11 +7,12 @@ W naszym projekcie zostanie użyta okmunikacja I2C do odbierania danych z żyros
 
 # 3.
 Schemat działania:
+
 ![alt text](https://scontent.fktw1-1.fna.fbcdn.net/v/t1.15752-9/79101368_2435949269996424_1568615184275079168_n.jpg?_nc_cat=103&_nc_oc=AQkOtnr16VKv8hDZKKAmO-ZDRGabKlzp5Hr4xesqyVkpXAs7D69B9ITi3YvHNxvKAFU&_nc_ht=scontent.fktw1-1.fna&oh=01e8d760d2db27df348f43ba3eab8465&oe=5E69ECC0)
 
 # 4.
 # I
-a) Budowa samochodu, oraz test jego działania.
+a) Budowa samochodu, oraz test jego działania. \n
 b) Odbiór danych z żyroskopu i przetowarzenie ich.
 # II
 Opracowanie kodu komunikacji na 433 MHz (FS100A)
