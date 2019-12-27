@@ -50,3 +50,16 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+KL25z_controler/RTE/Device/MKL25Z128xxx4/system_MKL25Z4.h
+*.s
+KL25z_controler/RTE/Device/MKL25Z128xxx4/system_MKL25Z4.c
+KL25z_controler/RTE/_Target_1/RTE_Components.h
+*.crf
+*.dep
+*.lnp
+*.htm
+*.axf
+*.uvprojx
+*.uvoptx
+KL25z_controler/gyroscope.uvguix.pawel
+*.lst
