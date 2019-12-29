@@ -1,12 +1,12 @@
 #include "I2C.h"
 
 //macros for i2c (pooling)
-#define I2C_start 	I2C0 -> C1 |= I2C_C1_MST_MASK;
-#define I2C_STOP 		I2C0 -> C1 ~I2C_C1_MST_MASK;
+#define I2C_START 	I2C0 -> C1 |= I2C_C1_MST_MASK;
+#define I2C_STOP 		I2C0 -> C1 &=~I2C_C1_MST_MASK;
 #define I2C_RESTART I2C0 -> C1 |= I2C_C1_RSTA_MASK;
 
 #define I2C_TRAN 		I2C0 -> C1 |= I2C_C1_TX_MASK;
-#define I2C_REC 		I2C0 -> C1 |= I2C_C1_TX_MASK;
+#define I2C_REC 		I2C0 -> C1 &= ~I2C_C1_TX_MASK;
 
 #define BUSY_ACK 		while(I2C0 -> S & 0x01)
 #define TRANS_COMP 	while(!(I2C0 -> S & IC2_S_TCF_MASK))
@@ -35,15 +35,84 @@ void I2C_init(){
 }
 
 void I2C_write(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t data){
-	I2C_start;
-	I2C0 -> D = SlaveAddr;
+	
+	I2C_START;
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;				//7-bit addres 1-bit R/W command (R/W = 0 - write)
 	I2C_WAIT
 	
 	I2C0 -> D = RegAddr;
 	I2C_WAIT
+	
+	I2C0 -> D = data;
+	I2C_WAIT
+	
+	I2C_STOP;
 }
 uint8_t I2C_read(uint8_t SlaveAddr, uint8_t RegAddr){
+	
+	uint8_t recData = 0;
+	
+	I2C_START
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;  				//7-bit addres 1-bit R/W command (R/W = 0 - write)
+	I2C_WAIT
+	
+	I2C0 -> D = RegAddr;
+	I2C_WAIT
+	
+	I2C_RESTART
+	
+	I2C0 -> D = (SlaveAddr << 1) | 0x1;	//7-bit addres 1-bit R/W command (R/W = 1 - read)
+	I2C_WAIT
+	
+	I2C_REC
+	NACK
+	
+	recData = I2C0 -> D;
+	I2C_WAIT
+	I2C_STOP
+	recData = I2C0 -> D;
+	
+	return recData;
+	
+}
 
+void I2C_multiRegRead(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t numOfReg, uint8_t *recMData){
+	
+	uint8_t i =0;
+	
+	I2C_START
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;  				//7-bit addres, 1-bit R/W command (R/W = 0 - write)
+	I2C_WAIT
+	
+	I2C0 -> D = RegAddr;
+	I2C_WAIT
+	
+	I2C_RESTART
+	
+	I2C0 -> D = (SlaveAddr << 1) | 0x1;	//7-bit addres, 1-bit R/W command (R/W = 1 - read)
+	I2C_WAIT
+	
+	I2C_REC
+	ACK
+	
+	i = I2C0 -> D;
+	I2C_WAIT
+	
+	for(i = 0; i < numOfReg - 2; i++){
+		*recMData = I2C0 -> D;
+		recMData++;
+		I2C_WAIT
+	}
+	NACK
+	*recMData = I2C0 -> D;
+	numOfReg++;
+	I2C_WAIT
+	I2C_STOP
+	*recMData = I2C0 -> D;
+		
 }
 
 void I2C0_IRQHandler(){
