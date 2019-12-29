@@ -1,5 +1,5 @@
 #include "MMA8451Q.h"
-
+#include "UART_0.h" 
 
 void ACCEL_init(void){
 	I2C_init();
@@ -13,7 +13,7 @@ void ACCEL_init(void){
 	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for PORTA14 */
 	NVIC_SetPriority (I2C0_IRQn, 0);				/* PORTA14 interrupt priority level  */ 
 	
-	uint8_t reg_val = 1;
+	uint8_t reg_val = 0;
 	
 	I2C_write(MMA_addr, CTRL_REG2, 0x40);
 	while(reg_val){
@@ -29,6 +29,7 @@ void ACCEL_init(void){
 	I2C_write(MMA_addr, ASLP_COUNT_REG, 0x03);
 	I2C_write(MMA_addr, CTRL_REG2, 0x1C);
 	I2C_write(MMA_addr, CTRL_REG1, 0x61);
+
 }
 
 uint16_t MMA_DATA(uint8_t* DATA_S){
