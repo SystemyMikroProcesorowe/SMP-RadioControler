@@ -64,3 +64,4 @@ KL25z_controler/RTE/_Target_1/RTE_Components.h
 KL25z_controler/gyroscope.uvguix.pawel
 *.lst
 *.ini
+KL25z_controler/JLinkLog.txt
