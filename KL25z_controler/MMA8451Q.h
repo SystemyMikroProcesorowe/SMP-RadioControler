@@ -34,15 +34,18 @@
 #define CTRL_REG5 					0x2E
 #define ASLP_COUNT_REG      0x29 
 
-	#define OFF_X_REG             0x2F    	// XYZ Offset Correction Registers 
-	#define OFF_Y_REG             0x30
-	#define OFF_Z_REG             0x31
-	#define TRANSIENT_CFG_REG     0x1D    	// TRANSIENT_CFG Transient Configuration Register 
-	#define TRANSIENT_SRC_REG     0x1E    	// TRANSIENT_SRC Transient Source Register 
-	#define TRANSIENT_THS_REG     0x1F    	// TRANSIENT_THS Transient Threshold Register 
-	#define TRANSIENT_COUNT_REG   0x20    	// TRANSIENT_COUNT Transient Debounce Counter Register
-	#define SENSITIVITY_2G		  4096
+#define OFF_X_REG             0x2F    	// XYZ Offset Correction Registers 
+#define OFF_Y_REG             0x30
+#define OFF_Z_REG             0x31
+#define TRANSIENT_CFG_REG     0x1D    	// TRANSIENT_CFG Transient Configuration Register 
+#define TRANSIENT_SRC_REG     0x1E    	// TRANSIENT_SRC Transient Source Register 
+#define TRANSIENT_THS_REG     0x1F    	// TRANSIENT_THS Transient Threshold Register 
+#define TRANSIENT_COUNT_REG   0x20    	// TRANSIENT_COUNT Transient Debounce Counter Register
+#define SENSITIVITY_2G		  4096
 	
 	
 void ACCEL_init(void);
+uint16_t X_axis();
+uint16_t Y_axis();
+uint16_t Z_axis();
 uint16_t MMA_DATA(uint8_t* DATA_S);
