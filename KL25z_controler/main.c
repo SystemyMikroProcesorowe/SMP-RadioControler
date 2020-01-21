@@ -7,7 +7,7 @@
 #include "transmision.h"
 
 int ii = 0xaffff;// delay value
-volatile uint8_t GetData = 1;
+volatile uint8_t GetData = 1;		//get data flag
 uint16_t A_DATA = 0;
 
 void main(void){
@@ -27,6 +27,7 @@ void main(void){
 		if(GetData){
 			GetData = 0;
 			prepare_data();
+			prepare_data_frame();
 			print_word("L-motor power: ");
 			print_num(get_L_motor_power());
 			print_word("	");

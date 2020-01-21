@@ -11,4 +11,4 @@ void transmit_1();
 void return_to_zero();
 void transmision_init();
 void start_transmision();
-void transmit_byte(uint8_t Tr);
+void transmit_byte();
