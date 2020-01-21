@@ -10,7 +10,14 @@
 #define LEFT_ENGINE_OFFSET 184
 #define RIGHT_ENGINE_OFFSET 201
 
+#define INTERRUPT_PIN 2
+
+int received_bit = 0; // VOLATILE ????
+
 int instr[4];
+
+int data_frame[24];
+
 /*
  * 0 - left engine % power
  * 1 - left engine direction (0 forward, 1 backward)
@@ -23,17 +30,18 @@ void setup()
     randomSeed(analogRead(0));
     engine_init(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN);
     engine_init(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN);
+
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), irq_receiver_handler, CHANGE); // CHANGE ?????
+    
+    setup_timer();
   }
 
 void loop() 
-  {
-  if(recive())
-    {
+  {  
       my_decode();
       engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
       engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]) ;
-      delay(100);
-    }
+      delay(100);    
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void engine_control(int IN1, int IN2, int SPEED, int ENGINE_OFFSET, int POWER, int DIR)
@@ -61,35 +69,36 @@ void engine_init(int IN1, int IN2, int SPEED)
 
 void my_decode()
   {
-  /*  
-   * decoding thing from recive() function and saving it to instr array
-   * 
-   * now it is writing in random stuff
-   */
-    instr[0] = random(101);
-    instr[2] = random(101);
-    if(random(101)>80)
-      {
-        instr[1] = random(2);
-        instr[3] = random(2);
-      } 
+
   }
-bool recive()
+void irq_receiver_handler()
   {
-    /*
-     * waiting for reciving full frame of data
-     * if accomplished, then save this as something 
-     * 
-     * now its a simulation of reciving nothing sometimes
-     */
-    if(random(10) > 5)
-      {
-        delay(random(5, 25));
-        return true;
-      }
-    else
-      {
-        delay(random(5, 25));
-        return false;
+    received_bit = 1;
+  }
+void setup_timer()
+  {
+    TCCR1A = 0;
+    TCCR1B = 0;
+    TCNT1  = 0;
+    OCR1A = 1999;
+    TCCR1B |= (1 << WGM12);
+    TCCR1B |= (1 << CS11);  
+    TIMSK1 |= (1 << OCIE1A);
+  }
+ISR(TIMER1_COMPA_vect)
+  {
+    shift_array();
+    data_frame[0] = received_bit ;
+    received_bit = 0;
+  }
+void shift_array()
+  {
+    int tmp = 0;
+    int tmp2 = 0;
+    for(int i = 0; i < 23; i++)
+      { 
+        tmp2 = data_frame[i];
+        data_frame[i] = tmp;
+        tmp = tmp2;
       }
   }
