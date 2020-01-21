@@ -59,4 +59,3 @@ uint16_t Z_axis(){//not used in this project
 uint16_t MMA_DATA(uint8_t* DATA_S){
 	I2C_multiRegRead(MMA_addr, OUT_X_MSB_REG, 6, DATA_S);
 }
-

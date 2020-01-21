@@ -6,17 +6,17 @@
 #define F_motor 0
 #define Rear_motor 1
 
-uint8_t strat_frame = 0b11111011;
-uint8_t current_bit = 0;
-uint8_t tx_buff[24] = {};
-uint8_t LR_power = 0;
-uint8_t LR_dir = 0;				//L=0, R=1
-uint8_t FR_power = 0;
-uint8_t FR_dir = 0;				//F=0, R=1
-int L_motor_power = 0;
-int R_motor_power = 0;
-uint8_t L_motor_dir = 0;	//0 - front 1 - back
-uint8_t R_motor_dir = 0;	//0 - front 1 - back
+#define start_frame = 0b11111011;
+static uint8_t current_bit;// = 0;
+static uint8_t tx_buff[24];// = {};
+static uint8_t LR_power;// = 0;
+static uint8_t LR_dir;// = 0;				//L=0, R=1
+static uint8_t FR_power;// = 0;
+static uint8_t FR_dir;// = 0;				//F=0, R=1
+static int L_motor_power;// = 0;
+static int R_motor_power;// = 0;
+static uint8_t L_motor_dir;// = 0;	//0 - front 1 - back
+static uint8_t R_motor_dir;// = 0;	//0 - front 1 - back
 /*left right calculation*/
 uint8_t get_LR_power();
 uint8_t get_LR_dir();
@@ -36,9 +36,9 @@ uint8_t get_R_motor_dir();
 /*transmision*/	
 void prepare_data();				//get x and y axis accelerate, calculate motor power fo each motor
 void prepare_data_frame();	//prepare the 24-bit data frame
-void transmit();						//transmit bites 
+uint8_t get_byte_value(uint8_t byte_num);						//transmit bites 
 /*Data to binary*/
-void power2bin(uint8_t L_power, uint8_t R_power);
+void power2bin(uint8_t L_power, uint8_t R_power);		//Change motors power to binary array
 /*
 1.prepare_data
 2.prepare_data_frame

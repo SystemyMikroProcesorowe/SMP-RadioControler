@@ -11,11 +11,11 @@ uint8_t get_LR_dir(){
 void set_LR_power(uint16_t power){
 	if(power > 8000){
 		set_LR_dir(L_motor);
-		LR_power = (power-15000)/1024*50;
+		LR_power = (float)(16384 - power)/1024*50;
 	}
 	else{
 		set_LR_dir(R_motor);
-		LR_power = power/1024*50;
+		LR_power = (float)power/1024*50;
 	}
 }
 
@@ -34,11 +34,11 @@ uint8_t get_FR_dir(){
 void set_FR_power(uint16_t power){
 	if(power > 8000){
 		set_FR_dir(F_motor);
-		FR_power = (power - 15000)/1024*100;
+		FR_power = (float)(16384 - power)/1024*100;
 	}
 	else{
 		set_FR_dir(Rear_motor);
-		FR_power = power/1024*100;
+		FR_power = (float)power/1024*100;
 	}
 }
 
@@ -123,6 +123,8 @@ void power2bin(uint8_t L_power, uint8_t R_power){
 	
 }
 
-void transmit(){
-	
+uint8_t get_byte_value(uint8_t byte_num){
+	return tx_buff[byte_num];
 }
+
+
