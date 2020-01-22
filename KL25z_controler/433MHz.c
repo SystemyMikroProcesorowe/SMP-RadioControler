@@ -120,11 +120,9 @@ void power2bin(uint8_t L_power, uint8_t R_power){
 	tx_buff[21] = (R_power >> 4)%2;
 	tx_buff[22] = (R_power >> 5)%2;
 	tx_buff[23] = (R_power >> 6)%2;	/////////
-	
 }
 
 uint8_t get_byte_value(uint8_t byte_num){
 	return tx_buff[byte_num];
 }
-
 

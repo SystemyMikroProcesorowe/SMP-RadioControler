@@ -18,7 +18,7 @@ void ACCEL_init(void){
 	uint8_t reg_val = 0;
 	
 	I2C_write(MMA_addr, CTRL_REG2, 0x40);
-	while(I2C_read(MMA_addr, CTRL_REG2) & 0x40){//reg_val){
+	while(I2C_read(MMA_addr, CTRL_REG2) & 0x40){
 		reg_val = I2C_read(MMA_addr, CTRL_REG2) & 0x40;
 		
 	}

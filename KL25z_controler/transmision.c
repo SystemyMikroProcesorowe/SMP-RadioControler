@@ -28,17 +28,6 @@ void transmit_byte(){
 		transmit_0();
 	}
 }
-	/*else if(2 == Tr){
-		++current_byte;
-		return_to_zero();
-		if(24 == current_byte){
-			current_byte = 0;
-			//GetData = 1; //set flag of data prepare
-		}
-	}*/
-
-
-
 
 //uint16_t ii =0;
 

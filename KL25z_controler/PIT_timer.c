@@ -18,9 +18,7 @@ void PIT_init(void)
 //uint16_t i =0;
 //uint16_t num =0;
 //void PIT_IRQHandler(void)										//PIT interrupt handler function
-//{ i++;
-	//if(4 == i) i=0;
-	//_7seg_update(i,num)
+//{ 
 /*	i++;
 	if (200 == i)
 	{PTB -> PSOR |= (1UL << 10);}
