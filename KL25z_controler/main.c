@@ -25,6 +25,7 @@ void main(void){
 	print_word("I2C 2nd read done \n\r");
 	
 	while(1){
+<<<<<<< Updated upstream
 		print_word("\r\nPrint data: \n\r");
 		if(DataReady){
 			DataReady = 0;
@@ -52,6 +53,32 @@ void main(void){
 			print_char('\n');
 		}
 		print_word("\rpentla while\n");
+=======
+		if(GetData){
+			GetData = 0;
+			prepare_data();
+			prepare_data_frame();
+			print_word("L-motor power: ");
+			print_num(get_L_motor_power());
+			print_word("	");
+			print_word("R-motor power: ");
+			print_num(get_R_motor_power());
+			print_word("	");
+/*			print_word("X: ");
+			print_num(X_axis());
+			print_word("	");
+			print_word("Y: ");
+			print_num(Y_axis());
+			print_word("\r");	*/
+			for(ii=0;ii<24;ii++){
+				A_DATA=get_byte_value(ii);
+				print_num(A_DATA);
+				if((ii+1)%8==0){print_word("	");}
+			}
+			print_word("\r");
+		}
+			ii = 0xdffff;
+>>>>>>> Stashed changes
 		while(ii){
 			--ii;
 		}
