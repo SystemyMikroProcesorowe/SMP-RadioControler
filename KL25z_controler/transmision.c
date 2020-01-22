@@ -17,7 +17,7 @@ void return_to_zero(){
 	++current_byte;
 	if(24 == current_byte){
 		current_byte = 0;
-		//GetData = 1; //set flag of data prepare
+		GetData = 1; //set flag of data prepare
 	}
 }
 void transmit_byte(){
@@ -27,6 +27,14 @@ void transmit_byte(){
 	else{
 		transmit_0();
 	}
+}
+
+uint8_t get_GetData(){
+	return GetData;
+}
+
+void clear_GetData(){
+	GetData = 0;
 }
 
 //uint16_t ii =0;

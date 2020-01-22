@@ -106,20 +106,20 @@ void prepare_data_frame(){
 }
 
 void power2bin(uint8_t L_power, uint8_t R_power){
-	tx_buff[9] 	=  L_power %2;		///////////	
-	tx_buff[10] = (L_power >> 1)%2;
-	tx_buff[11] = (L_power >> 2)%2;
+	tx_buff[15] 	=  L_power %2;		///////////	
+	tx_buff[14] = (L_power >> 1)%2;
+	tx_buff[13] = (L_power >> 2)%2;
 	tx_buff[12] = (L_power >> 3)%2;	//data
-	tx_buff[13] = (L_power >> 4)%2;
-	tx_buff[14] = (L_power >> 5)%2;
-	tx_buff[15] = (L_power >> 6)%2;	/////////
-	tx_buff[17] =  R_power %2;	/////////
-	tx_buff[18] = (R_power >> 1)%2;
-	tx_buff[19] = (R_power >> 2)%2;
+	tx_buff[11] = (L_power >> 4)%2;
+	tx_buff[10] = (L_power >> 5)%2;
+	tx_buff[9] = (L_power >> 6)%2;	/////////
+	tx_buff[23] =  R_power %2;	/////////
+	tx_buff[22] = (R_power >> 1)%2;
+	tx_buff[21] = (R_power >> 2)%2;
 	tx_buff[20] = (R_power >> 3)%2;	//data
-	tx_buff[21] = (R_power >> 4)%2;
-	tx_buff[22] = (R_power >> 5)%2;
-	tx_buff[23] = (R_power >> 6)%2;	/////////
+	tx_buff[19] = (R_power >> 4)%2;
+	tx_buff[18] = (R_power >> 5)%2;
+	tx_buff[17] = (R_power >> 6)%2;	/////////
 }
 
 uint8_t get_byte_value(uint8_t byte_num){

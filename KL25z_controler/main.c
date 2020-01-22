@@ -7,7 +7,6 @@
 #include "transmision.h"
 
 int ii = 0xaffff;// delay value
-volatile uint8_t GetData = 1;		//get data flag
 uint16_t A_DATA = 0;
 
 void main(void){
@@ -24,28 +23,22 @@ void main(void){
 	transmision_init();
 	
 	while(1){
-		if(GetData){
-			GetData = 0;
+		if(get_GetData()){
 			prepare_data();
 			prepare_data_frame();
+			clear_GetData();
 			print_word("L-motor power: ");
 			print_num(get_L_motor_power());
 			print_word("	");
 			print_word("R-motor power: ");
 			print_num(get_R_motor_power());
 			print_word("	");
-			print_word("X: ");
-			print_num(X_axis());
-			print_word("	");
-			print_word("Y: ");
-			print_num(Y_axis());
-			print_word("\r");			
+			for(ii=0;ii<24;ii++){
+				if(ii%8==0){print_char(' ');}
+				print_num(get_byte_value(ii));
+			}	
+			print_word("\r");
 		}
-			ii = 0xbffff;
-		while(ii){
-			--ii;
-		}
-		GetData = 1;
 	}
 	
 };
