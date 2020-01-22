@@ -17,7 +17,7 @@ int received_bit = 0; // VOLATILE ????
 int instr[4];
 
 int data_frame[24];
-
+uint8_t temp_bit = 0;
 uint8_t start_f = 0;
 #define start 0b11111011
 uint16_t fr = 0;
@@ -89,52 +89,55 @@ void setup_timer()
     TCCR1B |= (1 << CS11);  //dzielnik 8
     TIMSK1 |= (1 << OCIE1A);
   }
-
+uint8_t get_recBit_val(){
+  return received_bit;
+}
+void clear_recBit(){
+  received_bit = 0;
+}
   int ii=0;
 ISR(TIMER1_COMPA_vect)
   {
-    data_frame[0] = received_bit ;
+    temp_bit = get_recBit_val();
+    clear_recBit();
     if(start_f != start){
-      shift_array();
-      //Serial.println("start_f: "); 
-      //Serial.println(start_f); 
+      shift_array(); 
+      Serial.print("Start_F: ");
+      Serial.println(start_f, BIN);
+      //Serial.print("\r");
     } 
-    //Serial.println(received_bit);
-    else if(start_f == start){//Serial.println("DDDDDDDDD");
-         data_frame[ii+8] = received_bit;
+    else if(start_f == start){
+         data_frame[ii+8] = temp_bit;
          if(23==ii+8){
           ii=0;
           for(int j=0;j<16;j++){
             fr = (fr << 1) | data_frame[j+8];
           }
           Serial.println(fr, BIN);
-          //Serial.println(data_frame[15]);
-          //Serial.println("dach");
-          start_f=0;
+          //Serial.print("\r");
+          decode_data();
+          engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
+          engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]) ;
+          start_f=0;      //clear start frame, wait for next one
           }
          ii++;
       }   
     //Serial.println(start_f); 
-    received_bit = 0;
+
   }
 
   
 void shift_array()
   {
-    start_f = (start_f << 1) | data_frame[0];
+    start_f = (start_f << 1) | temp_bit;
   }
 
 void decode_data()
   {
-      if(start_f == start)
-          {
-            instr[1] = data_frame[15];
-            instr[3] = data_frame[7];
-            instr[0] = bin_to_dec(14);
-            instr[0] = bin_to_dec(6);
-            Serial.println("DU");
-          }  
-//          Serial.printf("%l %l %l %l %l %l %l %l %l",data_frame[23],data_frame[22],data_frame[21],data_frame[20],data_frame[19],data_frame[18],data_frame[17],data_frame[16]); 
+    instr[1] = data_frame[15];
+    instr[3] = data_frame[7];
+    instr[0] = bin_to_dec(14);
+    instr[0] = bin_to_dec(6);
   }
 
   
