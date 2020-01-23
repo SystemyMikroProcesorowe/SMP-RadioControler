@@ -26,7 +26,6 @@ void I2C_init(){
 	I2C0 -> F		|= I2C_F_MULT(2)
 							|  I2C_F_ICR(7);
 	I2C0 -> C1 	|= I2C_C1_IICEN_MASK;
-						//	|  I2C_C1_IICIE_MASK;
 
 	NVIC_ClearPendingIRQ(I2C0_IRQn);				/* Clear NVIC any pending interrupts on I2C */
 	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for I2C */

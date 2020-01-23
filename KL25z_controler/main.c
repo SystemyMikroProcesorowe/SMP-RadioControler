@@ -91,10 +91,13 @@ void main(void){
 };
 
 
+<<<<<<< Updated upstream
 void PORTA_IRQHandler()
 {
 	PORTA_PCR14 |= PORT_PCR_ISF_MASK;			// Clear the interrupt flag 
 	print_word("\rInterroupt");
 	DataReady = 1;	
 }
+=======
+>>>>>>> Stashed changes
 
