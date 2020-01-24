@@ -10,17 +10,18 @@
 #define LEFT_ENGINE_OFFSET 184
 #define RIGHT_ENGINE_OFFSET 201
 
-#define INTERRUPT_PIN 2
+#define INTERRUPT_PIN_RISE 2
+#define INTERRUPT_PIN_FALL 3
 
-int received_bit = 0; // VOLATILE ????
+volatile int received_bit = 0; 
 
 int instr[4];
 
-int data_frame[24];
-uint8_t temp_bit = 0;
-uint8_t start_f = 0;
-#define start 0b11111011
-uint16_t fr = 0;
+volatile int data_frame[18];
+volatile int frame_full = 0;
+
+volatile bool transmission = false;
+int tst_arr[] = {0, 1,0,0,0,1,0,1,1, 0,1,1,1,0,1,0,0, 1};
 /*
  * 0 - left engine % power
  * 1 - left engine direction (0 forward, 1 backward)
@@ -31,21 +32,23 @@ uint16_t fr = 0;
 void setup() 
   {
     Serial.begin(9600);
-    //randomSeed(analogRead(0));
     engine_init(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN);
     engine_init(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN);
 
-    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), irq_receiver_handler, RISING ); // CHANGE ?????
-    
-    setup_timer();
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_RISE), irq_receive_rise, RISING );
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_FALL), irq_receive_fall, FALLING );
+
+    cli();
+    setup_timer0();
+    sei();
+
+    //pinMode(7, OUTPUT); // for test only
   }
 
 void loop() 
-  {  
-     /*decode_data();
-      engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
-      engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]) ;
-      //delay(100);*/    
+  {    
+    //mock_transmission();
+    is_ready();
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void engine_control(int IN1, int IN2, int SPEED, int ENGINE_OFFSET, int POWER, int DIR)
@@ -73,71 +76,128 @@ void engine_init(int IN1, int IN2, int SPEED)
   }
 
 
-void irq_receiver_handler()
+void irq_receive_rise()
+  {
+    if(!transmission)
+    {
+      TCCR0B |= (1 << CS01) | (1 << CS00); // enable timer for clocking
+      transmission = true;
+    }
+    received_bit = 0;           
+  }
+
+
+void irq_receive_fall()
   {
     received_bit = 1;
   }
 
-  
-void setup_timer()
-  {
-    TCCR1A = 0;
-    TCCR1B = 0;
-    TCNT1  = 0;
-    OCR1A = 1999;//16 000 000/8=2 000 000/(1999+1)=1000
-    TCCR1B |= (1 << WGM12);
-    TCCR1B |= (1 << CS11);  //dzielnik 8
-    TIMSK1 |= (1 << OCIE1A);
-  }
-uint8_t get_recBit_val(){
-  return received_bit;
-}
-void clear_recBit(){
-  received_bit = 0;
-}
-  int ii=0;
-ISR(TIMER1_COMPA_vect)
-  {
-    temp_bit = get_recBit_val();
-    clear_recBit();
-    if(start_f != start){
-      shift_array(); 
-      Serial.print("Start_F: ");
-      Serial.println(start_f, BIN);
-      //Serial.print("\r");
-    } 
-    else if(start_f == start){
-         data_frame[ii+8] = temp_bit;
-         if(23==ii+8){
-          ii=0;
-          for(int j=0;j<16;j++){
-            fr = (fr << 1) | data_frame[j+8];
-          }
-          Serial.println(fr, BIN);
-          //Serial.print("\r");
-          decode_data();
-          engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
-          engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]) ;
-          start_f=0;      //clear start frame, wait for next one
-          }
-         ii++;
-      }   
-    //Serial.println(start_f); 
 
+void setup_timer0()
+  {
+//timer for clocking signal
+//interrupt every 0,5ms
+    TCCR0A = 0;// set entire TCCR0A register to 0
+    TCCR0B = 0;// same for TCCR0B
+    TCNT0  = 62;//initialize counter value to half (we need to count to 1/2 of period at the start
+    OCR0A = 124;// pre = 64 / int freq = 2khz/0,5ms
+    TCCR0A |= (1 << WGM01); // turn on CTC mode
+    
+    TCCR0B &= ~(1<< CS02);  // clock is off at the start
+    TCCR0B &= ~(1<< CS01);
+    TCCR0B &= ~(1<< CS00);
+    
+    TIMSK0 |= (1 << OCIE0A); // enable timer compare interrupt
   }
 
+
+ISR(TIMER0_COMPA_vect)
+  {
+    shift_array();
+    data_frame[0] = received_bit;
+    frame_full++;
+    TCNT0  = 0; // let timer count again
+  }
+
+
+void is_ready()
+  {
+    if(frame_full == 18)
+    {
+      transmission = false;
+      TCCR0B &= ~(1<< CS02);  // turn off the clock altogether
+      TCCR0B &= ~(1<< CS01);
+      TCCR0B &= ~(1<< CS00);
+      frame_full = 0;
+      TCNT0 = 62; // at the start of the frame timer must count for only half of period
+      decode_data();
+      engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
+      engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]);
+
+      /*
+      Serial.print("RAMKA ZEBRANA:");
+      if(compare())
+      {
+        Serial.println("GIT");
+      }
+      else
+      {
+        Serial.println("NIEGIT");
+      }
+      */
+      
+    }
+  }
+
+bool compare()
+{
+  for (int i = 0; i<18; i=i+1)
+    {
+      if (data_frame[i] != tst_arr[i]) return false;
+    }
   
+  return true;
+}
+
+void mock_transmission()
+{
+  for (int i = 0; i<18; i=i+1)
+    {
+      if (tst_arr[i] == 0)
+        {
+          digitalWrite(LOW,7);
+          delay(0.5);
+          digitalWrite(HIGH,7);
+          delay(0.5);
+        }
+       else
+        {
+          digitalWrite(HIGH,7);
+          delay(0.5);
+          digitalWrite(LOW,7);
+          delay(0.5);
+        }       
+    }       
+}
+
 void shift_array()
   {
-    start_f = (start_f << 1) | temp_bit;
+    int tmp = 0;
+    int tmp2 = 0;
+    for(int i = 0; i < 18; i++)
+      { 
+        tmp2 = data_frame[i];
+        data_frame[i] = tmp;
+        tmp = tmp2;
+      }
   }
 
 void decode_data()
   {
-    instr[1] = data_frame[15];
-    instr[3] = data_frame[7];
-    instr[0] = bin_to_dec(14);
-    instr[0] = bin_to_dec(6);
+    instr[1] = data_frame[8];
+    instr[3] = data_frame[16];
+    instr[0] = bin_to_dec(7);
+    instr[2] = bin_to_dec(15);
   }
 
   
@@ -148,8 +208,12 @@ int bin_to_dec(int offset)
 
     for(int i = offset; i >= offset - 6; i--)
       {
-        tmp += pow(2, e--);
+        if(data_frame[i])
+        {
+          tmp += pow(2, e);
+        } 
+        e--;
       }
-      
+          
     return tmp;
   }
