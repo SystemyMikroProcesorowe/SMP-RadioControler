@@ -6,9 +6,9 @@
 #define F_motor 0
 #define Rear_motor 1
 
-#define start_frame = 0b11111011;
+//#define start_frame = 0b11111011;
 static uint8_t current_bit;// = 0;
-static uint8_t tx_buff[24];// = {};
+static uint8_t tx_buff[18];// = {};
 static uint8_t LR_power;// = 0;
 static uint8_t LR_dir;// = 0;				//L=0, R=1
 static uint8_t FR_power;// = 0;

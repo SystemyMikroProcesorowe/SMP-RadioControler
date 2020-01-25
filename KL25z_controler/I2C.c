@@ -23,9 +23,10 @@ void I2C_init(){
 	SIM -> SCGC4 |= SIM_SCGC4_I2C0_MASK;		/*Enable clock for I2C module*/
 	SIM -> SCGC5 |= SIM_SCGC5_PORTE_MASK;		/*Enable clock for PORTB module*/
 	
-	I2C0 -> F		|= I2C_F_MULT(2)
+	I2C0 -> F		|= I2C_F_MULT(0)
 							|  I2C_F_ICR(7);
 	I2C0 -> C1 	|= I2C_C1_IICEN_MASK;
+						//	|  I2C_C1_IICIE_MASK;
 
 	NVIC_ClearPendingIRQ(I2C0_IRQn);				/* Clear NVIC any pending interrupts on I2C */
 	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for I2C */
