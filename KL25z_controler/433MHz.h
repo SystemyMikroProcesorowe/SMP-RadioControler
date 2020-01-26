@@ -1,41 +1,128 @@
-#include "MKL25Z4.h"                    // Device header
-#include "MMA8451Q.h"
+#include "I2C.h"
 
-#define L_motor 0
-#define R_motor 1
-#define F_motor 0
-#define Rear_motor 1
+//macros for i2c (pooling)
+#define I2C_START 	I2C0 -> C1 |= I2C_C1_MST_MASK;
+#define I2C_STOP 		I2C0 -> C1 &=~I2C_C1_MST_MASK;
+#define I2C_RESTART I2C0 -> C1 |= I2C_C1_RSTA_MASK;
+
+#define I2C_TRAN 		I2C0 -> C1 |= I2C_C1_TX_MASK;
+#define I2C_REC 		I2C0 -> C1 &= ~I2C_C1_TX_MASK;
+
+#define BUSY_ACK 		while(I2C0 -> S & 0x01)
+#define TRANS_COMP 	while(!(I2C0 -> S & IC2_S_TCF_MASK))
+#define I2C_WAIT 		while((I2C0 -> S & I2C_S_IICIF_MASK)==0){}\
+													I2C0 -> S |= I2C_S_IICIF_MASK;
+
+#define NACK 				I2C0 -> C1 |= I2C_C1_TXAK_MASK;
+#define ACK 				I2C0 -> C1 &= ~I2C_C1_TXAK_MASK;
+	
+#define pause				for(int i =0; i <50; i++){}
+
+	
+void I2C_init(){
+	SIM -> SCGC4 |= SIM_SCGC4_I2C0_MASK;		/*Enable clock for I2C module*/
+	SIM -> SCGC5 |= SIM_SCGC5_PORTE_MASK;		/*Enable clock for PORTB module*/
+	
+	I2C0 -> F		|= I2C_F_MULT(0)
+							|  I2C_F_ICR(7);
+	I2C0 -> C1 	|= I2C_C1_IICEN_MASK;
+						//	|  I2C_C1_IICIE_MASK;
+
+	NVIC_ClearPendingIRQ(I2C0_IRQn);				/* Clear NVIC any pending interrupts on I2C */
+	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for I2C */
+	NVIC_SetPriority (I2C0_IRQn, 0);			/* ToDo 7.2a: Set I2C interrupt priority level  */ 
+	
+	PORTE -> PCR[24] |= PORT_PCR_MUX(5);
+	PORTE -> PCR[25] |= PORT_PCR_MUX(5);
+}
 
 
-static uint8_t current_bit;// = 0;
-static uint8_t tx_buff[18];// = {};
-static uint8_t LR_power;// = 0;
-static uint8_t LR_dir;// = 0;				//L=0, R=1
-static uint8_t FR_power;// = 0;
-static uint8_t FR_dir;// = 0;				//F=0, R=1
-static int L_motor_power;// = 0;
-static int R_motor_power;// = 0;
-static uint8_t L_motor_dir;// = 0;	//0 - front 1 - back
-static uint8_t R_motor_dir;// = 0;	//0 - front 1 - back
-/*left right calculation*/
-uint8_t get_LR_power();
-uint8_t get_LR_dir();
-void set_LR_power(uint16_t power);
-void set_LR_dir(uint8_t dir);
-/*front rear calculation*/
-uint8_t get_FR_power();
-uint8_t get_FR_dir();
-void set_FR_power(uint16_t power);
-void set_FR_dir(uint8_t dir);
-/*engin power*/
-void calcuate_motor_power();
-uint8_t get_L_motor_power();
-uint8_t get_R_motor_power();
-uint8_t get_L_motor_dir();
-uint8_t get_R_motor_dir();
-/*transmision*/	
-void prepare_data();				//get x and y axis accelerate, calculate motor power fo each motor
-void prepare_data_frame();	//prepare the 24-bit data frame
-uint8_t get_byte_value(uint8_t byte_num);						//transmit bites 
-/*Data to binary*/
-void power2bin(uint8_t L_power, uint8_t R_power);		//Change motors power to binary array
+void I2C_write(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t data){
+	
+	I2C_START;
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;				//7-bit addres 1-bit R/W command (R/W = 0 - write)
+	I2C_WAIT
+	
+	I2C0 -> D = RegAddr;
+	I2C_WAIT
+	
+	I2C0 -> D = data;
+	I2C_WAIT
+	
+	I2C_STOP;
+	pause
+}
+
+
+uint8_t I2C_read(uint8_t SlaveAddr, uint8_t RegAddr){
+	
+	uint8_t recData = 0;
+	
+	I2C_START
+	pause//
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;  				//7-bit addres 1-bit R/W command (R/W = 0 - write)
+	I2C_WAIT
+	
+	I2C0 -> D = RegAddr;
+	I2C_WAIT
+	
+	I2C_RESTART
+	pause//
+	
+	I2C0 -> D = (SlaveAddr << 1) | 0x1;	//7-bit addres 1-bit R/W command (R/W = 1 - read)
+	I2C_WAIT
+	
+	I2C_REC
+	NACK
+	
+	recData = I2C0 -> D;
+	I2C_WAIT
+	I2C_STOP
+	I2C_REC
+	recData = I2C0 -> D;
+	pause
+	
+	return recData;
+	
+}
+
+
+void I2C_multiRegRead(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t numOfReg, uint8_t *recMData){
+	
+	uint8_t i =0;
+	
+	I2C_START
+	I2C_TRAN
+	I2C0 -> D = SlaveAddr << 1;  				//7-bit addres, 1-bit R/W command (R/W = 0 - write)
+	I2C_WAIT
+	
+	I2C0 -> D = RegAddr;
+	I2C_WAIT
+	
+	I2C_RESTART
+	
+	I2C0 -> D = (SlaveAddr << 1) | 0x1;	//7-bit addres, 1-bit R/W command (R/W = 1 - read)
+	I2C_WAIT
+	
+	I2C_REC
+	ACK
+	
+	i = I2C0 -> D;
+	I2C_WAIT
+	
+	for(i = 0; i < numOfReg - 2; i++){
+		*recMData = I2C0 -> D;
+		recMData++;
+		I2C_WAIT
+	}
+	NACK
+	*recMData = I2C0 -> D;
+	numOfReg++;
+	I2C_WAIT
+	I2C_STOP
+	*recMData = I2C0 -> D;
+		pause
+	
+}
