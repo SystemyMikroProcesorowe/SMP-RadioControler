@@ -19,9 +19,11 @@ void transmit_1(){
 
 
 void return_to_zero(){
-	FPTB -> PCOR |= (1 << transmit_pin);	
+	if(1 == get_byte_value(current_byte)){
+	FPTB -> PCOR |= (1 << transmit_pin);}	
+	else{	FPTB -> PSOR |= (1 << transmit_pin);}
 	++current_byte;
-	if(24 == current_byte){
+	if(18 == current_byte){
 		current_byte = 0;
 		GetData = 1; //set flag of data prepare
 	}
@@ -29,7 +31,7 @@ void return_to_zero(){
 
 
 void transmit_byte(){
-	if(1 == get_byte_value(current_byte)){
+	if(1 == get_byte_value(current_byte-4)){
 		transmit_1();
 	}
 	else{
@@ -48,16 +50,25 @@ void clear_GetData(){
 }
 
 
+void start_transmision(){
+	FPTB -> PCOR |= (1 << transmit_pin);
+	current_byte++;
+}
+
+
 void PIT_IRQHandler(void)										//PIT interrupt handler function
 {
-	static uint8_t i = transmit;
-	if(transmit == i){	
-		transmit_byte();	
+	if(current_byte < 4){start_transmision();}
+	else{
+		static uint8_t i = transmit;
+		if(transmit == i){	
+			transmit_byte();	
+		}
+		if(return_zero == i){ 
+			return_to_zero();
+			i = 0;
+		}
+		i++;
 	}
-	if(return_zero == i){ 
-		return_to_zero();
-		i = 0;
-	}
-	i++;
 	PIT_TFLG0 |= PIT_TFLG_TIF_MASK;						//Clear PIT0 falg
 }
