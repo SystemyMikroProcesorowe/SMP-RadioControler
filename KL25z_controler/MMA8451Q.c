@@ -7,9 +7,9 @@ void ACCEL_init(void){
 	I2C_init();
 	
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;				//Turn on PortA for MMA interrupt
-	PORTA -> PCR[14] |= PORT_PCR_MUX(1)
-	        | PORT_PCR_ISF_MASK			//Clear interrupt falg
-	        | PORT_PCR_IRQC(0xB);		//Config for fallin edge
+	PORTA -> PCR[14] |= PORT_PCR_MUX(1)				//
+			| PORT_PCR_ISF_MASK			//Clear interrupt falg
+			| PORT_PCR_IRQC(0xB);		//Config for fallin edge
 	
 	NVIC_ClearPendingIRQ(I2C0_IRQn);				/* Clear NVIC any pending interrupts on PORTA14 */
 	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for PORTA14 */
@@ -20,10 +20,12 @@ void ACCEL_init(void){
 	I2C_write(MMA_addr, CTRL_REG2, 0x40);
 	while(I2C_read(MMA_addr, CTRL_REG2) & 0x40){
 		reg_val = I2C_read(MMA_addr, CTRL_REG2) & 0x40;
+		
 	}
 	I2C_write(MMA_addr, CTRL_REG1, 0x00);
 	I2C_write(MMA_addr, XYZ_DATA_CFG, 0x03);
-
+	
+	
 	I2C_write(MMA_addr, CTRL_REG3, 0b11111000);
 	I2C_write(MMA_addr, CTRL_REG4, 0x01);
 	I2C_write(MMA_addr, CTRL_REG5, 0x00);
