@@ -10,14 +10,18 @@
 #define LEFT_ENGINE_OFFSET 184
 #define RIGHT_ENGINE_OFFSET 201
 
-#define INTERRUPT_PIN 2
+#define INTERRUPT_PIN_RISE 2
+#define INTERRUPT_PIN_FALL 3
 
-int received_bit = 0; // VOLATILE ????
+volatile int received_bit = 0; 
 
 int instr[4];
 
-int data_frame[24];
+volatile int data_frame[18];
+volatile int frame_full = 0;
 
+volatile bool transmission = false;
+int tst_arr[] = {0, 1,0,0,0,1,0,1,1, 0,1,1,1,0,1,0,0, 1};
 /*
  * 0 - left engine % power
  * 1 - left engine direction (0 forward, 1 backward)
@@ -27,21 +31,24 @@ int data_frame[24];
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() 
   {
-    randomSeed(analogRead(0));
+    Serial.begin(9600);
     engine_init(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN);
     engine_init(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN);
 
-    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), irq_receiver_handler, CHANGE); // CHANGE ?????
-    
-    setup_timer();
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_RISE), irq_receive_rise, RISING );
+    attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_FALL), irq_receive_fall, FALLING );
+
+    cli();
+    setup_timer0();
+    sei();
+
+    //pinMode(7, OUTPUT); // for test only
   }
 
 void loop() 
-  {  
-      decode_data();
-      engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
-      engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]) ;
-      //delay(100);    
+  {    
+    //mock_transmission();
+    is_ready();
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void engine_control(int IN1, int IN2, int SPEED, int ENGINE_OFFSET, int POWER, int DIR)
@@ -69,37 +76,115 @@ void engine_init(int IN1, int IN2, int SPEED)
   }
 
 
-void irq_receiver_handler()
+void irq_receive_rise()
+  {
+    if(!transmission)
+    {
+      TCCR0B |= (1 << CS01) | (1 << CS00); // enable timer for clocking
+      transmission = true;
+    }
+    received_bit = 0;           
+  }
+
+
+void irq_receive_fall()
   {
     received_bit = 1;
   }
 
-  
-void setup_timer()
+
+void setup_timer0()
   {
-    TCCR1A = 0;
-    TCCR1B = 0;
-    TCNT1  = 0;
-    OCR1A = 1999;
-    TCCR1B |= (1 << WGM12);
-    TCCR1B |= (1 << CS11);  
-    TIMSK1 |= (1 << OCIE1A);
+//timer for clocking signal
+//interrupt every 0,5ms
+    TCCR0A = 0;// set entire TCCR0A register to 0
+    TCCR0B = 0;// same for TCCR0B
+    TCNT0  = 62;//initialize counter value to half (we need to count to 1/2 of period at the start
+    OCR0A = 124;// pre = 64 / int freq = 2khz/0,5ms
+    TCCR0A |= (1 << WGM01); // turn on CTC mode
+    
+    TCCR0B &= ~(1<< CS02);  // clock is off at the start
+    TCCR0B &= ~(1<< CS01);
+    TCCR0B &= ~(1<< CS00);
+    
+    TIMSK0 |= (1 << OCIE0A); // enable timer compare interrupt
   }
 
-  
-ISR(TIMER1_COMPA_vect)
+
+ISR(TIMER0_COMPA_vect)
   {
     shift_array();
-    data_frame[0] = received_bit ;
-    received_bit = 0;
+    data_frame[0] = received_bit;
+    frame_full++;
+    TCNT0  = 0; // let timer count again
   }
 
+
+void is_ready()
+  {
+    if(frame_full == 18)
+    {
+      transmission = false;
+      TCCR0B &= ~(1<< CS02);  // turn off the clock altogether
+      TCCR0B &= ~(1<< CS01);
+      TCCR0B &= ~(1<< CS00);
+      frame_full = 0;
+      TCNT0 = 62; // at the start of the frame timer must count for only half of period
+      decode_data();
+      engine_control(LEFT_IN1_PIN, LEFT_IN2_PIN, LEFT_SPEED_PIN, LEFT_ENGINE_OFFSET, instr[0], instr[1]);
+      engine_control(RIGHT_IN1_PIN, RIGHT_IN2_PIN, RIGHT_SPEED_PIN, RIGHT_ENGINE_OFFSET, instr[2], instr[3]);
+
+      /*
+      Serial.print("RAMKA ZEBRANA:");
+      if(compare())
+      {
+        Serial.println("GIT");
+      }
+      else
+      {
+        Serial.println("NIEGIT");
+      }
+      */
+      
+    }
+  }
+
+bool compare()
+{
+  for (int i = 0; i<18; i=i+1)
+    {
+      if (data_frame[i] != tst_arr[i]) return false;
+    }
   
+  return true;
+}
+
+void mock_transmission()
+{
+  for (int i = 0; i<18; i=i+1)
+    {
+      if (tst_arr[i] == 0)
+        {
+          digitalWrite(LOW,7);
+          delay(0.5);
+          digitalWrite(HIGH,7);
+          delay(0.5);
+        }
+       else
+        {
+          digitalWrite(HIGH,7);
+          delay(0.5);
+          digitalWrite(LOW,7);
+          delay(0.5);
+        }       
+    }       
+}
+
 void shift_array()
   {
     int tmp = 0;
     int tmp2 = 0;
-    for(int i = 0; i < 23; i++)
+    for(int i = 0; i < 18; i++)
       { 
         tmp2 = data_frame[i];
         data_frame[i] = tmp;
@@ -109,20 +194,10 @@ void shift_array()
 
 void decode_data()
   {
-      if(data_frame[23] == 1 &&
-          data_frame[22] == 1 &&
-          data_frame[21] == 1 &&
-          data_frame[20] == 1 &&
-          data_frame[19] == 1 &&
-          data_frame[18] == 0 &&
-          data_frame[17] == 1 &&
-          data_frame[16] == 1)
-          {
-            instr[1] = data_frame[15];
-            instr[3] = data_frame[7];
-            instr[0] = bin_to_dec(14);
-            instr[0] = bin_to_dec(6);
-          }   
+    instr[1] = data_frame[8];
+    instr[3] = data_frame[16];
+    instr[0] = bin_to_dec(7);
+    instr[2] = bin_to_dec(15);
   }
 
   
@@ -133,8 +208,12 @@ int bin_to_dec(int offset)
 
     for(int i = offset; i >= offset - 6; i--)
       {
-        tmp += pow(2, e--);
+        if(data_frame[i])
+        {
+          tmp += pow(2, e);
+        } 
+        e--;
       }
-      
+          
     return tmp;
   }
