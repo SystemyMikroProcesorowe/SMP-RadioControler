@@ -10,6 +10,7 @@ int ii = 0xaffff;// delay value
 uint16_t A_DATA = 0;
 
 void main(void){
+
 	UART_init(9600);
 	print_char('U');
 	I2C_init();
@@ -40,14 +41,5 @@ void main(void){
 			print_word("\r");
 		}
 	}
-	
 };
-
-
-/*void PORTA_IRQHandler()
-{
-	PORTA_PCR14 |= PORT_PCR_ISF_MASK;			// Clear the interrupt flag 
-	print_word("\rInterroupt");
-	DataReady = 1;	
-}*/
 

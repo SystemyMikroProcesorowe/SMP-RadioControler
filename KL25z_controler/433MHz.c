@@ -45,7 +45,7 @@ void set_FR_power(uint16_t power){
 void set_FR_dir(uint8_t dir){
 		FR_dir = dir;
 }
-void calculate_motor_power(){//uint8_t x_axis, uint8_t x_dir, uint8_t y_axis, uint8_t y_dir){	
+void calculate_motor_power(){
 	L_motor_power = R_motor_power = FR_power;
 	if(LR_dir == L_motor){
 		L_motor_power -= LR_power;
@@ -63,7 +63,7 @@ void calculate_motor_power(){//uint8_t x_axis, uint8_t x_dir, uint8_t y_axis, ui
 			R_motor_power *=(-1);
 			}
 		}
-	if(FR_dir == 1){//jazda do przodu
+	if(FR_dir == 1){
 		L_motor_dir ^= 1;
 		R_motor_dir ^= 1;
 	}
@@ -106,20 +106,20 @@ void prepare_data_frame(){
 }
 
 void power2bin(uint8_t L_power, uint8_t R_power){
-	tx_buff[15] 	=  L_power %2;		///////////	
+	tx_buff[15] 	=  L_power %2;
 	tx_buff[14] = (L_power >> 1)%2;
 	tx_buff[13] = (L_power >> 2)%2;
 	tx_buff[12] = (L_power >> 3)%2;	//data
 	tx_buff[11] = (L_power >> 4)%2;
 	tx_buff[10] = (L_power >> 5)%2;
-	tx_buff[9] = (L_power >> 6)%2;	/////////
-	tx_buff[23] =  R_power %2;	/////////
+	tx_buff[9] = (L_power >> 6)%2;
+	tx_buff[23] =  R_power %2;
 	tx_buff[22] = (R_power >> 1)%2;
 	tx_buff[21] = (R_power >> 2)%2;
 	tx_buff[20] = (R_power >> 3)%2;	//data
 	tx_buff[19] = (R_power >> 4)%2;
 	tx_buff[18] = (R_power >> 5)%2;
-	tx_buff[17] = (R_power >> 6)%2;	/////////
+	tx_buff[17] = (R_power >> 6)%2;
 }
 
 uint8_t get_byte_value(uint8_t byte_num){

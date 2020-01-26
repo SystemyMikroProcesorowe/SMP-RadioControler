@@ -6,12 +6,18 @@ void transmision_init(){
 	PORTB -> PCR[transmit_pin] |= PORT_PCR_MUX(1);
 	FPTB -> PDDR |= (1 << transmit_pin);
 }
+
+
 void transmit_0(){
 	FPTB -> PCOR |= (1 << transmit_pin);
 }
+
+
 void transmit_1(){
 	FPTB -> PSOR |= (1 << transmit_pin);
 }
+
+
 void return_to_zero(){
 	FPTB -> PCOR |= (1 << transmit_pin);	
 	++current_byte;
@@ -20,6 +26,8 @@ void return_to_zero(){
 		GetData = 1; //set flag of data prepare
 	}
 }
+
+
 void transmit_byte(){
 	if(1 == get_byte_value(current_byte)){
 		transmit_1();
@@ -29,15 +37,15 @@ void transmit_byte(){
 	}
 }
 
+
 uint8_t get_GetData(){
 	return GetData;
 }
 
+
 void clear_GetData(){
 	GetData = 0;
 }
-
-//uint16_t ii =0;
 
 
 void PIT_IRQHandler(void)										//PIT interrupt handler function
@@ -52,13 +60,4 @@ void PIT_IRQHandler(void)										//PIT interrupt handler function
 	}
 	i++;
 	PIT_TFLG0 |= PIT_TFLG_TIF_MASK;						//Clear PIT0 falg
-	/*
-	i++;
-	if (1000 == i)
-	{PTB -> PSOR |= (1UL << transmit_pin);
-	}
-	else if (2000 == i)
-	{PTB -> PCOR |= (1UL << transmit_pin);
-	i=0;}*/
-	
 }

@@ -13,12 +13,10 @@
 #define OUT_Z_LSB_REG         0x06		// [7:2] are the 6 LSB of 14-bit Z-axis sample
 
 #define WHO_AM_I 0x0D
-/*#define F_SETUP  0x09
 #define TRIG_CFG 0x0A
 #define SYSMOD	 0x0B
 #define INT_SOURCE 		0x0C*/
 #define XYZ_DATA_CFG	0x0E
-/*#define PL_STATUS 		0x10
 #define PL_CFG 				0x11
 #define PL_COUNT 			0x12
 #define PL_BF_ZCOMP 	0x13
@@ -32,16 +30,14 @@
 #define CTRL_REG3 					0x2C
 #define CTRL_REG4 					0x2D
 #define CTRL_REG5 					0x2E
-#define ASLP_COUNT_REG      0x29 
-
-/*#define OFF_X_REG             0x2F    	// XYZ Offset Correction Registers 
+#define ASLP_COUNT_REG      0x29
 #define OFF_Y_REG             0x30
 #define OFF_Z_REG             0x31
 #define TRANSIENT_CFG_REG     0x1D    	// TRANSIENT_CFG Transient Configuration Register 
 #define TRANSIENT_SRC_REG     0x1E    	// TRANSIENT_SRC Transient Source Register 
 #define TRANSIENT_THS_REG     0x1F    	// TRANSIENT_THS Transient Threshold Register 
 #define TRANSIENT_COUNT_REG   0x20    	// TRANSIENT_COUNT Transient Debounce Counter Register
-#define SENSITIVITY_2G		  4096*/
+#define SENSITIVITY_2G		  4096
 	
 	
 void ACCEL_init(void);

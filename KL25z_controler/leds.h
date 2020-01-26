@@ -11,7 +11,7 @@ void ledGreenOn (void);
 void startStopFSM(void);
 void ledsService1ms(void);
 void nextLedState(void);
-/////my
+
 void my_sequence(void);
 
 unsigned char phaseA(void);
