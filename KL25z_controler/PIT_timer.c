@@ -11,7 +11,6 @@ void PIT_init(void)
 	NVIC_EnableIRQ(PIT_ALARM_INT_NBR);				//Interrupt clera,enable,priority
 	NVIC_SetPriority(PIT_ALARM_INT_NBR,0);
 	
-	//PIT -> CHANNEL[0].TCTRL |= PIT_TCTRL_TEN_MASK;
 	PIT_TCTRL0 |= PIT_TCTRL_TEN_MASK;					//Enable timer to start
 }
 
