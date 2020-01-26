@@ -6,9 +6,9 @@
 #define F_motor 0
 #define Rear_motor 1
 
-#define start_frame = 0b11111011;
+
 static uint8_t current_bit;// = 0;
-static uint8_t tx_buff[24];// = {};
+static uint8_t tx_buff[18];// = {};
 static uint8_t LR_power;// = 0;
 static uint8_t LR_dir;// = 0;				//L=0, R=1
 static uint8_t FR_power;// = 0;
@@ -28,7 +28,7 @@ uint8_t get_FR_dir();
 void set_FR_power(uint16_t power);
 void set_FR_dir(uint8_t dir);
 /*engin power*/
-void calcuate_motor_power();//uint8_t x_axis, uint8_t x_dir, uint8_t y_axis, uint8_t y_dir);
+void calcuate_motor_power();
 uint8_t get_L_motor_power();
 uint8_t get_R_motor_power();
 uint8_t get_L_motor_dir();
@@ -39,8 +39,3 @@ void prepare_data_frame();	//prepare the 24-bit data frame
 uint8_t get_byte_value(uint8_t byte_num);						//transmit bites 
 /*Data to binary*/
 void power2bin(uint8_t L_power, uint8_t R_power);		//Change motors power to binary array
-/*
-1.prepare_data
-2.prepare_data_frame
-3.transmit - every PIT interroup function send 1-bit of data by changing the value of pin
-*/
