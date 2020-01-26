@@ -17,16 +17,15 @@
 #define ACK 				I2C0 -> C1 &= ~I2C_C1_TXAK_MASK;
 	
 #define pause				for(int i =0; i <50; i++){}
-///
+
 	
 void I2C_init(){
 	SIM -> SCGC4 |= SIM_SCGC4_I2C0_MASK;		/*Enable clock for I2C module*/
 	SIM -> SCGC5 |= SIM_SCGC5_PORTE_MASK;		/*Enable clock for PORTB module*/
 	
-	I2C0 -> F		|= I2C_F_MULT(0)
-							|  I2C_F_ICR(7);
-	I2C0 -> C1 	|= I2C_C1_IICEN_MASK;
-						//	|  I2C_C1_IICIE_MASK;
+	I2C0 -> F |= I2C_F_MULT(0)
+		  |  I2C_F_ICR(7);
+	I2C0 -> C1 |= I2C_C1_IICEN_MASK;
 
 	NVIC_ClearPendingIRQ(I2C0_IRQn);				/* Clear NVIC any pending interrupts on I2C */
 	NVIC_EnableIRQ(I2C0_IRQn);							/* Enable NVIC interrupts source for I2C */
@@ -35,6 +34,7 @@ void I2C_init(){
 	PORTE -> PCR[24] |= PORT_PCR_MUX(5);
 	PORTE -> PCR[25] |= PORT_PCR_MUX(5);
 }
+
 
 void I2C_write(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t data){
 	
@@ -52,6 +52,8 @@ void I2C_write(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t data){
 	I2C_STOP;
 	pause
 }
+
+
 uint8_t I2C_read(uint8_t SlaveAddr, uint8_t RegAddr){
 	
 	uint8_t recData = 0;
@@ -66,7 +68,7 @@ uint8_t I2C_read(uint8_t SlaveAddr, uint8_t RegAddr){
 	I2C_WAIT
 	
 	I2C_RESTART
-	pause//
+	pause
 	
 	I2C0 -> D = (SlaveAddr << 1) | 0x1;	//7-bit addres 1-bit R/W command (R/W = 1 - read)
 	I2C_WAIT
@@ -81,9 +83,9 @@ uint8_t I2C_read(uint8_t SlaveAddr, uint8_t RegAddr){
 	recData = I2C0 -> D;
 	pause
 	
-	return recData;
-	
+	return recData;	
 }
+
 
 void I2C_multiRegRead(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t numOfReg, uint8_t *recMData){
 	
@@ -120,9 +122,5 @@ void I2C_multiRegRead(uint8_t SlaveAddr, uint8_t RegAddr, uint8_t numOfReg, uint
 	I2C_STOP
 	*recMData = I2C0 -> D;
 		pause
-	
-}
-
-void I2C0_IRQHandler(){
 	
 }
