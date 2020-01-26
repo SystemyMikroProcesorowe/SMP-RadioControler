@@ -10,7 +10,6 @@ int ii = 0xaffff;// delay value
 uint16_t A_DATA = 0;
 
 void main(void){
-
 	UART_init(9600);
 	print_char('U');
 	I2C_init();
@@ -41,5 +40,5 @@ void main(void){
 			print_word("\r");
 		}
 	}
+	
 };
-
